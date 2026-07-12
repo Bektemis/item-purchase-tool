@@ -40,10 +40,18 @@ public with sharing class ItemPurchaseController {
     }
 
     @AuraEnabled
-    public static Id checkout(Id accountId, List<CartItem> cartItems) {
+    public static Id checkout(Id accountId, String cartItemsJson) {
+
+        System.debug('RAW JSON RECEIVED: ' + cartItemsJson);
+
+        if (String.isBlank(cartItemsJson)) {
+            throw new AuraHandledException('Cart is empty.');
+        }
+
+        List<CartItem> cartItems = (List<CartItem>) JSON.deserialize(cartItemsJson, List<CartItem>.class);
 
         if (cartItems == null || cartItems.isEmpty()) {
-            throw new AuraHandledException('Корзина пуста.');
+            throw new AuraHandledException('Cart is empty.');
         }
 
         Set<Id> itemIds = new Set<Id>();
@@ -62,18 +70,18 @@ public with sharing class ItemPurchaseController {
             Item__c item = itemsMap.get(ci.itemId);
 
             if (item == null) {
-                errors.add('Товар не найден: ' + ci.itemId);
+                errors.add('Item not found: ' + ci.itemId);
                 continue;
             }
 
             if (ci.quantity == null || ci.quantity <= 0) {
-                errors.add('Некорректное количество для товара: ' + item.Name);
+                errors.add('Invalid quantity for item: ' + item.Name);
                 continue;
             }
 
             if (item.Available_Quantity__c == null || item.Available_Quantity__c < ci.quantity) {
-                errors.add('Недостаточно товара на складе: ' + item.Name +
-                            ' (доступно: ' + item.Available_Quantity__c + ', запрошено: ' + ci.quantity + ')');
+                errors.add('Insufficient stock for item: ' + item.Name +
+                            ' (available: ' + item.Available_Quantity__c + ', requested: ' + ci.quantity + ')');
             }
         }
 
@@ -89,9 +97,6 @@ public with sharing class ItemPurchaseController {
         List<Purchase_Line__c> linesToInsert = new List<Purchase_Line__c>();
         List<Item__c> itemsToUpdate = new List<Item__c>();
 
-        Decimal totalItemsCount = 0;
-        Decimal grandTotal = 0;
-
         for (CartItem ci : cartItems) {
             Item__c item = itemsMap.get(ci.itemId);
 
@@ -103,9 +108,6 @@ public with sharing class ItemPurchaseController {
             );
             linesToInsert.add(line);
 
-            totalItemsCount += ci.quantity;
-            grandTotal += (item.Price__c * ci.quantity);
-
             Item__c itemToUpdate = new Item__c(
                 Id = item.Id,
                 Available_Quantity__c = item.Available_Quantity__c - ci.quantity
@@ -114,14 +116,13 @@ public with sharing class ItemPurchaseController {
         }
 
         insert linesToInsert;
-
         update itemsToUpdate;
 
         return purchase.Id;
     }
 
     public class CartItem {
-        @AuraEnabled public Id itemId;
-        @AuraEnabled public Integer quantity;
+        public Id itemId;
+        public Integer quantity;
     }
 }

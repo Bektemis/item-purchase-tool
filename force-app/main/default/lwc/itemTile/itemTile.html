@@ -1,0 +1,36 @@
+<template>
+    <div class="slds-box slds-box_x-small item-tile">
+        <template if:true={item.Image__c}>
+            <img src={item.Image__c} alt={item.Name} class="item-image" />
+        </template>
+
+        <h3 class="slds-text-heading_small slds-var-m-top_x-small">{item.Name}</h3>
+        <p class="slds-text-body_small slds-truncate">{item.Description__c}</p>
+        <p class="slds-text-body_small">
+            <lightning-formatted-number
+                value={item.Price__c}
+                format-style="currency"
+                currency-code="USD"
+            ></lightning-formatted-number>
+        </p>
+
+        <div class="slds-grid slds-grid_align-spread slds-var-m-top_small">
+            <lightning-button
+                label="Details"
+                onclick={openDetails}
+                variant="neutral"
+            ></lightning-button>
+
+            <lightning-button
+                label={addButtonLabel}
+                onclick={handleAdd}
+                disabled={isOutOfStock}
+                variant="brand"
+            ></lightning-button>
+        </div>
+    </div>
+
+    <template if:true={isDetailModalOpen}>
+        <c-item-detail-modal item={item} onclose={closeDetails}></c-item-detail-modal>
+    </template>
+</template>

@@ -1,0 +1,49 @@
+<template>
+    <div class="tool-container">
+        <div class="header slds-grid slds-grid_align-spread slds-p-around_medium slds-var-m-bottom_small">
+            <div class="slds-col">
+                <template if:true={isManager}>
+                    <lightning-button
+                        label="Create Item"
+                        onclick={openCreateItem}
+                        variant="brand"
+                    ></lightning-button>
+                </template>
+            </div>
+
+            <div class="slds-col slds-align-middle">
+                <template if:true={account}>
+                    <span class="slds-text-heading_small">
+                        {account.Name} | {account.AccountNumber} | {account.Industry}
+                    </span>
+                </template>
+            </div>
+
+            <div class="slds-col">
+                <lightning-button
+                    label={cartCount}
+                    icon-name="utility:cart"
+                    onclick={openCart}
+                    variant="brand"
+                ></lightning-button>
+            </div>
+        </div>
+
+        <c-item-filter-panel oncartadd={handleAddToCart}></c-item-filter-panel>
+
+        <template if:true={isCartOpen}>
+            <c-cart-modal
+                cart-items={cartItems}
+                account-id={recordId}
+                onclose={closeCart}
+            ></c-cart-modal>
+        </template>
+
+        <template if:true={isCreateItemOpen}>
+            <c-create-item-modal
+                onclose={closeCreateItem}
+                oncreated={handleItemCreated}
+            ></c-create-item-modal>
+        </template>
+    </div>
+</template>

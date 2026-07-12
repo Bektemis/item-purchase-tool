@@ -92,12 +92,10 @@ private class ItemPurchaseControllerTest {
         Account acc = [SELECT Id FROM Account LIMIT 1];
         Item__c item = [SELECT Id, Available_Quantity__c FROM Item__c WHERE Name = 'Test Item One' LIMIT 1];
 
-        ItemPurchaseController.CartItem cartItem = new ItemPurchaseController.CartItem();
-        cartItem.itemId = item.Id;
-        cartItem.quantity = 3;
+        String cartJson = '[{"itemId":"' + item.Id + '","quantity":3}]';
 
         Test.startTest();
-        Id purchaseId = ItemPurchaseController.checkout(acc.Id, new List<ItemPurchaseController.CartItem>{ cartItem });
+        Id purchaseId = ItemPurchaseController.checkout(acc.Id, cartJson);
         Test.stopTest();
 
         System.assertNotEquals(null, purchaseId);
@@ -122,16 +120,14 @@ private class ItemPurchaseControllerTest {
         Account acc = [SELECT Id FROM Account LIMIT 1];
         List<Item__c> items = [SELECT Id, Available_Quantity__c FROM Item__c];
 
-        List<ItemPurchaseController.CartItem> cartItems = new List<ItemPurchaseController.CartItem>();
+        List<String> parts = new List<String>();
         for (Item__c item : items) {
-            ItemPurchaseController.CartItem ci = new ItemPurchaseController.CartItem();
-            ci.itemId = item.Id;
-            ci.quantity = 2;
-            cartItems.add(ci);
+            parts.add('{"itemId":"' + item.Id + '","quantity":2}');
         }
+        String cartJson = '[' + String.join(parts, ',') + ']';
 
         Test.startTest();
-        Id purchaseId = ItemPurchaseController.checkout(acc.Id, cartItems);
+        Id purchaseId = ItemPurchaseController.checkout(acc.Id, cartJson);
         Test.stopTest();
 
         List<Purchase_Line__c> lines = [
@@ -145,19 +141,15 @@ private class ItemPurchaseControllerTest {
         Account acc = [SELECT Id FROM Account LIMIT 1];
         Item__c item = [SELECT Id FROM Item__c WHERE Name = 'Test Item One' LIMIT 1];
 
-        ItemPurchaseController.CartItem cartItem = new ItemPurchaseController.CartItem();
-        cartItem.itemId = item.Id;
-        cartItem.quantity = 999;
+        String cartJson = '[{"itemId":"' + item.Id + '","quantity":999}]';
 
         Boolean exceptionThrown = false;
-        String errorMessage = '';
 
         Test.startTest();
         try {
-            ItemPurchaseController.checkout(acc.Id, new List<ItemPurchaseController.CartItem>{ cartItem });
+            ItemPurchaseController.checkout(acc.Id, cartJson);
         } catch (AuraHandledException e) {
             exceptionThrown = true;
-            errorMessage = e.getMessage();
         }
         Test.stopTest();
 
@@ -172,7 +164,7 @@ private class ItemPurchaseControllerTest {
 
         Test.startTest();
         try {
-            ItemPurchaseController.checkout(acc.Id, new List<ItemPurchaseController.CartItem>());
+            ItemPurchaseController.checkout(acc.Id, '[]');
         } catch (AuraHandledException e) {
             exceptionThrown = true;
         }
@@ -186,15 +178,13 @@ private class ItemPurchaseControllerTest {
         Account acc = [SELECT Id FROM Account LIMIT 1];
         Item__c item = [SELECT Id FROM Item__c WHERE Name = 'Test Item One' LIMIT 1];
 
-        ItemPurchaseController.CartItem cartItem = new ItemPurchaseController.CartItem();
-        cartItem.itemId = item.Id;
-        cartItem.quantity = 0;
+        String cartJson = '[{"itemId":"' + item.Id + '","quantity":0}]';
 
         Boolean exceptionThrown = false;
 
         Test.startTest();
         try {
-            ItemPurchaseController.checkout(acc.Id, new List<ItemPurchaseController.CartItem>{ cartItem });
+            ItemPurchaseController.checkout(acc.Id, cartJson);
         } catch (AuraHandledException e) {
             exceptionThrown = true;
         }

@@ -1,0 +1,42 @@
+<template>
+    <div class="slds-grid slds-wrap slds-p-around_medium">
+        <div class="slds-col slds-size_1-of-4 slds-p-right_medium">
+            <lightning-input
+                type="search"
+                label="Search"
+                placeholder="Search by name..."
+                onchange={handleSearchChange}
+            ></lightning-input>
+
+            <lightning-combobox
+                label="Type"
+                value={typeFilter}
+                options={typeOptions}
+                onchange={handleTypeChange}
+                class="slds-var-m-top_small"
+            ></lightning-combobox>
+
+            <lightning-combobox
+                label="Family"
+                value={familyFilter}
+                options={familyOptions}
+                onchange={handleFamilyChange}
+                class="slds-var-m-top_small"
+            ></lightning-combobox>
+
+            <p class="slds-text-body_small slds-var-m-top_small">
+                {itemCount} items found
+            </p>
+        </div>
+
+        <div class="slds-col slds-size_3-of-4">
+            <div class="slds-grid slds-wrap slds-gutters">
+                <template for:each={items} for:item="item">
+                    <div key={item.Id} class="slds-col slds-size_1-of-3 slds-var-p-around_x-small">
+                        <c-item-tile item={item} onadd={handleCartAdd}></c-item-tile>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+</template>
