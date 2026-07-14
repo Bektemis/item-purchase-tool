@@ -1,12 +1,21 @@
 import { LightningElement } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { updateRecord } from 'lightning/uiRecordApi';
+import getImageUrl from '@salesforce/apex/UnsplashService.getImageUrl';
+import ITEM_OBJECT from '@salesforce/schema/Item__c';
+import ID_FIELD from '@salesforce/schema/Item__c.Id';
+import IMAGE_FIELD from '@salesforce/schema/Item__c.Image__c';
 
 export default class CreateItemModal extends LightningElement {
+
     closeModal() {
         this.dispatchEvent(new CustomEvent('close'));
     }
 
-    handleSuccess() {
+    handleSuccess(event) {
+        const newItemId = event.detail.id;
+        const itemName = event.detail.fields.Name.value;
+
         this.dispatchEvent(
             new ShowToastEvent({
                 title: 'Success',
@@ -15,7 +24,31 @@ export default class CreateItemModal extends LightningElement {
             })
         );
 
-        this.dispatchEvent(new CustomEvent('created'));
+        this.fetchAndSetImage(newItemId, itemName);
+    }
+
+    fetchAndSetImage(itemId, itemName) {
+        getImageUrl({ query: itemName })
+            .then((imageUrl) => {
+                if (imageUrl) {
+                    const fields = {};
+                    fields[ID_FIELD.fieldApiName] = itemId;
+                    fields[IMAGE_FIELD.fieldApiName] = imageUrl;
+
+                    const recordInput = { fields };
+
+                    return updateRecord(recordInput);
+                }
+                return null;
+            })
+            .then(() => {
+                this.dispatchEvent(new CustomEvent('created'));
+            })
+            .catch((error) => {
+                console.error('Failed to fetch/set image', error);
+                // Даже если картинка не подтянулась, запись уже создана - закрываем модалку
+                this.dispatchEvent(new CustomEvent('created'));
+            });
     }
 
     handleError(event) {
