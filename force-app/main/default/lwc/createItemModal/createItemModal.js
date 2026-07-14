@@ -2,7 +2,6 @@ import { LightningElement } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { updateRecord } from 'lightning/uiRecordApi';
 import getImageUrl from '@salesforce/apex/UnsplashService.getImageUrl';
-import ITEM_OBJECT from '@salesforce/schema/Item__c';
 import ID_FIELD from '@salesforce/schema/Item__c.Id';
 import IMAGE_FIELD from '@salesforce/schema/Item__c.Image__c';
 
@@ -46,7 +45,6 @@ export default class CreateItemModal extends LightningElement {
             })
             .catch((error) => {
                 console.error('Failed to fetch/set image', error);
-                // Даже если картинка не подтянулась, запись уже создана - закрываем модалку
                 this.dispatchEvent(new CustomEvent('created'));
             });
     }
